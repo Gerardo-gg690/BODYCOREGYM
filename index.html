@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101216">
+  <title>BODYCORE GYM | Panel de administración</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">B<span>C</span></div>
+        <div><strong>BODYCORE</strong><small>GYM MANAGEMENT</small></div>
+      </div>
+      <div class="side-label">MENÚ PRINCIPAL</div>
+      <nav class="nav-menu">
+        <button class="nav-link active" data-page="dashboard"><span class="nav-icon">▦</span>Panel general</button>
+        <button class="nav-link" data-page="members"><span class="nav-icon">♙</span>Clientes <span class="nav-count" id="navMembers">0</span></button>
+        <button class="nav-link" data-page="access"><span class="nav-icon">⌁</span>Control de acceso</button>
+        <button class="nav-link" data-page="payments"><span class="nav-icon">＄</span>Pagos y membresías</button>
+        <button class="nav-link" data-page="inventory"><span class="nav-icon">▤</span>Inventario y ventas</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="demo-status"><i></i><div><b>Modo demostración</b><small>Datos de ejemplo</small></div></div>
+        <div class="user-profile"><div class="avatar">AD</div><div><b>Administrador</b><small>BODYCORE GYM</small></div><span class="dots">•••</span></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menú">☰</button>
+        <div class="breadcrumb">BODYCORE GYM <span>/</span> <b id="breadcrumbPage">Panel general</b></div>
+        <div class="top-actions"><span class="today" id="todayLabel"></span><button class="icon-button" title="Notificaciones">♧<i></i></button><div class="top-avatar">AD</div></div>
+      </header>
+
+      <section class="page active" id="page-dashboard">
+        <div class="welcome-row">
+          <div><div class="eyebrow">CENTRO DE CONTROL</div><h1>Panel <em>general.</em></h1><p>Bienvenido de nuevo. Este es el resumen de BODYCORE GYM.</p></div>
+          <button class="primary-btn" data-go="members">＋ Registrar cliente</button>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card"><div class="stat-top"><span>CLIENTES REGISTRADOS</span><span class="stat-icon blue">♙</span></div><div class="stat-value" id="statMembers">0</div><div class="stat-foot"><span class="positive">●</span> Total de clientes</div></article>
+          <article class="stat-card"><div class="stat-top"><span>MEMBRESÍAS ACTIVAS</span><span class="stat-icon green">✓</span></div><div class="stat-value" id="statActive">0</div><div class="stat-foot">Clientes al día</div></article>
+          <article class="stat-card"><div class="stat-top"><span>POR VENCER</span><span class="stat-icon amber">◷</span></div><div class="stat-value" id="statSoon">0</div><div class="stat-foot">En los próximos 3 días</div></article>
+          <article class="stat-card"><div class="stat-top"><span>INGRESOS REGISTRADOS</span><span class="stat-icon red">$</span></div><div class="stat-value" id="statRevenue">$0.00</div><div class="stat-foot">Ingresos de hoy</div></article>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel access-panel">
+            <div class="panel-heading"><div><div class="eyebrow">RECEPCIÓN</div><h2>Validar acceso</h2><p>Comprueba el estado de una membresía antes de permitir la entrada.</p></div><span class="live-pill"><i></i> EN VIVO</span></div>
+            <form id="quickAccessForm" class="access-form"><div class="field-wrap"><label for="quickCode">CÓDIGO DEL CLIENTE</label><div class="input-with-icon"><span>⌕</span><input id="quickCode" placeholder="Ej. BC-00125" autocomplete="off"></div></div><button class="primary-btn" type="submit">Verificar acceso <span>→</span></button></form>
+            <div class="access-hint">Introduce el código del cliente para consultar su membresía.</div>
+            <div id="quickAccessResult"></div>
+          </article>
+          <article class="panel alerts-panel">
+            <div class="panel-heading"><div><div class="eyebrow">SEGUIMIENTO</div><h2>Atención requerida</h2><p>Clientes que necesitan seguimiento.</p></div><span class="alert-total" id="alertTotal">0</span></div>
+            <div id="attentionList" class="attention-list"></div>
+          </article>
+        </div>
+
+        <article class="panel table-panel">
+          <div class="panel-heading"><div><div class="eyebrow">ACTIVIDAD RECIENTE</div><h2>Últimos clientes registrados</h2></div><button class="text-btn" data-go="members">Ver todos <span>→</span></button></div>
+          <div class="table-scroll"><table><thead><tr><th>CLIENTE</th><th>CÓDIGO</th><th>MEMBRESÍA</th><th>VENCIMIENTO</th><th>ESTADO</th></tr></thead><tbody id="recentMembers"></tbody></table></div>
+        </article>
+      </section>
+
+      <section class="page" id="page-members">
+        <div class="welcome-row"><div><div class="eyebrow">BASE DE CLIENTES</div><h1>Gestión de <em>clientes.</em></h1><p>Administra los registros y consulta el estado de cada membresía.</p></div><button class="primary-btn" id="openMemberModal">＋ Nuevo cliente</button></div>
+        <article class="panel table-panel">
+          <div class="toolbar"><div class="search-box"><span>⌕</span><input id="memberSearch" placeholder="Buscar por nombre o código..."></div><select id="memberFilter"><option value="all">Todos los estados</option><option value="active">Activos</option><option value="soon">Por vencer</option><option value="expired">Vencidos</option></select></div>
+          <div class="table-scroll"><table><thead><tr><th>CLIENTE</th><th>CÓDIGO</th><th>TELÉFONO</th><th>PLAN</th><th>PAGÓ DÍA</th><th>PAGÓ MES</th><th>VENCIMIENTO</th><th>ESTADO</th><th></th></tr></thead><tbody id="membersTable"></tbody></table></div>
+          <div class="table-foot" id="memberCount"></div>
+        </article>
+      </section>
+
+      <section class="page" id="page-access">
+        <div class="welcome-row"><div><div class="eyebrow">RECEPCIÓN / CHECK-IN</div><h1>Control de <em>acceso.</em></h1><p>Verifica el código de cada persona antes de permitir su ingreso.</p></div><span class="live-pill large"><i></i> RECEPCIÓN ACTIVA</span></div>
+        <div class="access-screen panel">
+          <div class="scan-visual"><div class="scan-corners"><span></span><span></span><span></span><span></span><div class="scan-symbol">⌗</div></div><div class="scan-caption">VALIDACIÓN DE MEMBRESÍA</div><small>Escanea un QR con un lector compatible o escribe el código manualmente.</small></div>
+          <div class="access-entry kiosk-entry"><div class="eyebrow">ACCESO DE AUTOSERVICIO</div><h2>Ingresa tu código</h2><p class="kiosk-intro">Usa el teclado numérico para consultar tu membresía y registrar tu llegada.</p><form id="accessForm"><label for="accessCode">CÓDIGO DE CLIENTE</label><input id="accessCode" class="kiosk-code" placeholder="— — — —" inputmode="none" autocomplete="off" maxlength="4" readonly aria-label="Código del cliente"><div class="numeric-keypad" id="accessKeypad" aria-label="Teclado numérico"><button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button><button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button><button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button><button type="button" class="key-action" data-key="clear">Borrar</button><button type="button" data-key="0">0</button><button type="button" class="key-action" data-key="back">⌫</button></div><button class="primary-btn full kiosk-submit" type="submit">Consultar y registrar llegada <span>→</span></button></form><div id="accessResult" class="access-result empty-result"><span class="result-icon">⌨</span><b>Listo para ingresar tu código</b><small>Tu estado de membresía aparecerá aquí.</small></div></div>
+        </div>
+        <div class="note-card"><span>ⓘ</span><div><b>Importante</b><p>Esta demostración valida membresías con datos ficticios. En la versión final se puede incorporar lectura de QR desde cámara, registro de cada visita y permisos por rol.</p></div></div>
+      </section>
+
+      <section class="page" id="page-payments">
+        <div class="welcome-row"><div><div class="eyebrow">ADMINISTRACIÓN FINANCIERA</div><h1>Pagos y <em>membresías.</em></h1><p>Consulta vencimientos y registra renovaciones de clientes.</p></div><button class="primary-btn" id="openPaymentModal">＋ Registrar pago</button></div>
+        <div class="stats-grid compact-stats"><article class="stat-card"><div class="stat-top"><span>PENDIENTES / VENCIDOS</span><span class="stat-icon red">!</span></div><div class="stat-value" id="payExpired">0</div><div class="stat-foot">Requieren seguimiento</div></article><article class="stat-card"><div class="stat-top"><span>PRÓXIMOS A VENCER</span><span class="stat-icon amber">◷</span></div><div class="stat-value" id="paySoon">0</div><div class="stat-foot">En 3 días o menos</div></article><article class="stat-card"><div class="stat-top"><span>INGRESOS REGISTRADOS</span><span class="stat-icon green">$</span></div><div class="stat-value" id="payRevenue">$0.00</div><div class="stat-foot">Pagos recibidos hoy</div></article></div>
+        <article class="panel table-panel"><div class="panel-heading"><div><div class="eyebrow">CONTROL DE COBROS</div><h2>Estado de membresías</h2></div></div><div class="table-scroll"><table><thead><tr><th>CLIENTE</th><th>CÓDIGO</th><th>PLAN</th><th>ÚLTIMO PAGO</th><th>VENCIMIENTO</th><th>ESTADO</th><th>ACCIÓN</th></tr></thead><tbody id="paymentsTable"></tbody></table></div></article>
+        <div class="note-card"><span>✉</span><div><b>Recordatorios por WhatsApp</b><p>La demostración puede preparar un mensaje personalizado para copiar y enviar. La automatización de mensajes requiere una integración adicional con WhatsApp Business.</p></div></div>
+      </section>
+
+      <section class="page" id="page-inventory">
+        <div class="welcome-row"><div><div class="eyebrow">PRODUCTOS DEL GIMNASIO</div><h1>Inventario y <em>ventas.</em></h1><p>Registra productos, consulta existencias y simula ventas.</p></div><button class="primary-btn" id="openProductModal">＋ Agregar producto</button></div>
+        <div class="stats-grid compact-stats"><article class="stat-card"><div class="stat-top"><span>PRODUCTOS</span><span class="stat-icon blue">▤</span></div><div class="stat-value" id="productCount">0</div><div class="stat-foot">Referencias registradas</div></article><article class="stat-card"><div class="stat-top"><span>UNIDADES EN STOCK</span><span class="stat-icon green">▣</span></div><div class="stat-value" id="stockCount">0</div><div class="stat-foot">Existencias disponibles</div></article><article class="stat-card"><div class="stat-top"><span>VENTAS REGISTRADAS</span><span class="stat-icon amber">$</span></div><div class="stat-value" id="salesTotal">$0.00</div><div class="stat-foot">Ventas registradas</div></article></div>
+        <article class="panel table-panel"><div class="panel-heading"><div><div class="eyebrow">EXISTENCIAS</div><h2>Productos disponibles</h2></div></div><div class="table-scroll"><table><thead><tr><th>PRODUCTO</th><th>CATEGORÍA</th><th>PRECIO</th><th>STOCK</th><th>ESTADO</th><th>VENTA</th></tr></thead><tbody id="inventoryTable"></tbody></table></div></article>
+        <article class="panel table-panel" style="margin-top:16px">
+          <div class="panel-heading"><div><div class="eyebrow">REGISTRO COMERCIAL</div><h2>Productos vendidos</h2><p class="muted">Detalle de bebidas, snacks y suplementos vendidos.</p></div></div>
+          <div class="stats-grid compact-stats" id="salesCategorySummary"></div>
+          <div class="table-scroll"><table><thead><tr><th>FECHA</th><th>PRODUCTO</th><th>CATEGORÍA</th><th>UNIDADES</th><th>TOTAL</th></tr></thead><tbody id="salesDetailTable"></tbody></table></div>
+        </article>
+      </section>
+
+      <footer class="footer"><span>BODYCORE GYM <b>•</b> SISTEMA DE ADMINISTRACIÓN</span><span>Prototipo demostrativo · 2026</span></footer>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="memberModal"><div class="modal"><div class="modal-head"><div><div class="eyebrow">BASE DE CLIENTES</div><h2>Registrar cliente</h2></div><button class="close-modal" data-close="memberModal">×</button></div><form id="memberForm" class="modal-form"><div class="form-grid"><div class="field-wrap full-field"><label>NOMBRE COMPLETO</label><input name="name" required placeholder="Nombre del cliente"></div><div class="field-wrap"><label>TELÉFONO</label><input name="phone" placeholder="0000-0000"></div><div class="field-wrap"><label>TIPO DE MEMBRESÍA</label><select name="plan"><option>Mensual</option><option>15 días</option><option>Day pass</option></select></div><div class="field-wrap"><label>FECHA DE INICIO</label><input name="start" type="date" required></div><div class="field-wrap"><label>FECHA DE VENCIMIENTO</label><input name="expiry" type="date" required></div><div class="field-wrap full-field"><label>PRECIO PAGADO ($)</label><input name="amount" type="number" min="0" step="0.01" placeholder="Ej. 25.00"></div></div><div class="modal-actions"><button type="button" class="secondary-btn" data-close="memberModal">Cancelar</button><button class="primary-btn" type="submit">Guardar cliente</button></div></form></div></div>
+
+  <div class="modal-backdrop" id="paymentModal"><div class="modal small-modal"><div class="modal-head"><div><div class="eyebrow">RENOVACIÓN</div><h2>Registrar pago</h2></div><button class="close-modal" data-close="paymentModal">×</button></div><form id="paymentForm" class="modal-form"><div class="field-wrap"><label>CLIENTE</label><select name="member" id="paymentMember" required></select></div><div class="field-wrap"><label>MONTO ($)</label><input name="amount" type="number" min="0.01" step="0.01" required placeholder="25.00"></div><div class="field-wrap"><label>NUEVA FECHA DE VENCIMIENTO</label><input name="expiry" type="date" required></div><div class="modal-actions"><button type="button" class="secondary-btn" data-close="paymentModal">Cancelar</button><button class="primary-btn" type="submit">Guardar pago</button></div></form></div></div>
+
+  <div class="modal-backdrop" id="productModal"><div class="modal small-modal"><div class="modal-head"><div><div class="eyebrow">INVENTARIO</div><h2>Agregar producto</h2></div><button class="close-modal" data-close="productModal">×</button></div><form id="productForm" class="modal-form"><div class="field-wrap"><label>NOMBRE DEL PRODUCTO</label><input name="name" required placeholder="Ej. Agua embotellada"></div><div class="form-grid"><div class="field-wrap"><label>CATEGORÍA</label><input name="category" placeholder="Bebidas"></div><div class="field-wrap"><label>PRECIO ($)</label><input name="price" type="number" min="0" step="0.01" required></div><div class="field-wrap full-field"><label>EXISTENCIAS INICIALES</label><input name="stock" type="number" min="0" step="1" required></div></div><div class="modal-actions"><button type="button" class="secondary-btn" data-close="productModal">Cancelar</button><button class="primary-btn" type="submit">Guardar producto</button></div></form></div></div>
+
+  <div class="toast" id="toast"></div>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
+  <script src="enhancements.js"></script>
+  <script src="firebase-bridge.js"></script>
+</body>
+</html>

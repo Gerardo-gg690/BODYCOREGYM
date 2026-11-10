@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0d0f12">
+<title>BODYCORE GYM | Kiosco de entrada</title>
+<link rel="stylesheet" href="kiosco.css">
+</head>
+<body>
+<main class="kiosk-shell">
+  <header class="kiosk-brand"><div class="brand-mark">B<span>C</span></div><div><strong>BODYCORE</strong><small>GYM · AUTOSERVICIO</small></div></header>
+  <section class="kiosk-card">
+    <div class="eyebrow">CONTROL DE ACCESO</div>
+    <h1>¡Bienvenido!</h1>
+    <p class="intro">Ingresa tu código de cliente para registrar tu llegada y consultar cuándo debes renovar tu membresía.</p>
+    <label for="memberCode">TU CÓDIGO DE CLIENTE</label>
+    <output id="memberCode" class="code-display" aria-live="polite">_ _ _ _</output>
+    <div class="keypad" id="keypad">
+      <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
+      <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
+      <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
+      <button type="button" class="key-alt" data-key="clear">Borrar</button><button type="button" data-key="0">0</button><button type="button" class="key-alt" data-key="back">⌫</button>
+    </div>
+    <button type="button" class="submit" id="checkIn">Consultar y registrar llegada</button>
+    <section id="result" class="result" aria-live="polite"><div class="result-symbol">⌨</div><b>Esperando tu código</b><span>Tu estado aparecerá aquí.</span></section>
+    <button type="button" id="reset" class="reset">Limpiar pantalla</button>
+  </section>
+  <footer>BODYCORE GYM · Entrena fuerte, entrena constante</footer>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="kiosco.js"></script>
+<script src="firebase-bridge.js"></script>
+</body>
+</html>
