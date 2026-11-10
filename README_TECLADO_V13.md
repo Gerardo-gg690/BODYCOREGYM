@@ -1,0 +1,1 @@
+# V13 - Teclado físico en el kiosco\n\nEn kiosco.html ahora se puede introducir el PIN usando 0-9, Backspace para borrar un dígito, Supr/Escape para limpiar, e Intro para consultar y registrar llegada. El teclado táctil continúa funcionando.\n\nNota: Esta actualización no cambia las reglas de Firebase ni resuelve las restricciones de autenticación del kiosco.\n

@@ -8,6 +8,25 @@
   const show=(kind,title,lines)=>{result.className=`result ${kind}`;result.innerHTML=`<div class="result-symbol">${kind==='ok'?'✓':'!'}</div><b>${title}</b>${lines.map((line,i)=>`<span class="${i===lines.length-1&&kind==='no'?'renew':''}">${line}</span>`).join('')}`;};
   const draw=()=>{codeOut.textContent=code.padEnd(4,'_').split('').join(' ');};
   document.getElementById('keypad').addEventListener('click',e=>{const b=e.target.closest('[data-key]');if(!b)return;const k=b.dataset.key;if(k==='clear')code='';else if(k==='back')code=code.slice(0,-1);else if(/^\d$/.test(k)&&code.length<4)code+=k;draw();});
+  // Permitir el ingreso del PIN con teclado físico, además del teclado en pantalla.
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
+    const target = e.target;
+    if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+    if (/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+      document.querySelector(`#keypad [data-key="${e.key}"]`).click();
+    } else if (e.key === 'Backspace') {
+      e.preventDefault();
+      document.querySelector('#keypad [data-key="back"]').click();
+    } else if (e.key === 'Delete' || e.key === 'Escape') {
+      e.preventDefault();
+      document.querySelector('#keypad [data-key="clear"]').click();
+    } else if (e.key === 'Enter' && target?.id !== 'checkIn') {
+      e.preventDefault();
+      document.getElementById('checkIn').click();
+    }
+  });
   document.getElementById('reset').addEventListener('click',()=>{code='';draw();result.className='result';result.innerHTML='<div class="result-symbol">⌨</div><b>Esperando tu código</b><span>Tu estado aparecerá aquí.</span>';});
   document.getElementById('checkIn').addEventListener('click',async()=>{
     if(!/^\d{4}$/.test(code)){show('no','CÓDIGO INCOMPLETO',['Ingresa los cuatro números de tu código.']);return;}
