@@ -108,7 +108,7 @@ render=function(){oldRender();enhancedRenderMembers();enhancedInventory();render
 ensureExtraPages();
 $('#membersTable').closest('table').querySelector('thead tr').innerHTML='<th>CLIENTE</th><th>CÓDIGO</th><th>TELÉFONO</th><th>PLAN</th><th>PAGÓ DÍA</th><th>PAGÓ MES</th><th>VENCIMIENTO</th><th>ESTADO</th><th></th>';
 const planSelect=$('#memberForm select[name=plan]');
-planSelect.innerHTML='<option>Mensual</option><option>15 días</option><option>Day pass</option>';
+planSelect.innerHTML='<option>Mensual</option><option>15 días</option><option>Day pass</option><option value="Promoción personalizada">Promoción personalizada</option>';
 $('#memberForm [name=amount]').value=25;
 planSelect.addEventListener('change',()=>$('#memberForm [name=amount]').value=planPrices[planSelect.value]);
 $('#memberForm [name=amount]').readOnly=false;
@@ -284,16 +284,32 @@ syncVisitOptions();render();
   const expiry=mf.elements.expiry;expiry.required=false;expiry.readOnly=true;
   const expiryLabel=expiry.closest('.field-wrap')?.querySelector('label');if(expiryLabel)expiryLabel.textContent='VENCIMIENTO AUTOMÁTICO';
   const plan=mf.elements.plan,amount=mf.elements.amount,start=mf.elements.start;
+  const customWrap=document.createElement('div');customWrap.className='field-wrap full-field';customWrap.id='customPromotionFields';
+  customWrap.innerHTML='<div class="form-grid"><div class="field-wrap"><label>NOMBRE DE LA PROMOCIÓN</label><input name="promoName" maxlength="80" placeholder="Ej. Promo de verano"></div><div class="field-wrap"><label>DURACIÓN (DÍAS)</label><input name="promoDays" type="number" min="1" max="3650" step="1" placeholder="Ej. 45"></div></div>';
+  plan.closest('.field-wrap').insertAdjacentElement('afterend',customWrap);
+  const promoName=mf.elements.promoName,promoDays=mf.elements.promoDays;
+  const isCustom=()=>plan.value==='Promoción personalizada';
+  const updateCustomVisibility=()=>{customWrap.hidden=!isCustom();promoName.required=isCustom();promoDays.required=isCustom();};
+  const originalPlanDuration=durationFor;
+  const selectedDuration=()=>isCustom()?Number(promoDays.value):originalPlanDuration(plan.value);
+  const fillEditPromo=m=>{if(m?.promoDays&&m?.promoName){plan.value='Promoción personalizada';promoName.value=m.promoName;promoDays.value=m.promoDays;}else{plan.value=m?.plan||'Mensual';promoName.value='';promoDays.value='';}updateCustomVisibility();};
+  document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-member]');if(edit){const m=data.members.find(x=>x.id===Number(edit.dataset.editMember));if(m)setTimeout(()=>{fillEditPromo(m);expiry.value=m.expiry||'';},0);}});
+  $id('openMemberModal')?.addEventListener('click',()=>{promoName.value='';promoDays.value='';updateCustomVisibility();});
+  updateCustomVisibility();
  if(!mf.elements.code){const codeWrap=document.createElement('div');codeWrap.className='field-wrap';codeWrap.innerHTML='<label>CÓDIGO DEL CLIENTE</label><input name="code" inputmode="numeric" maxlength="4" placeholder="Se asigna automáticamente"><small class="muted">Puedes cambiarlo al editar, siempre que no esté asignado a otra persona.</small>';mf.querySelector('.form-grid').insertBefore(codeWrap,mf.querySelector('[name=phone]').closest('.field-wrap'));}
  const codeInput=mf.elements.code;
-  const updatePreview=()=>{const days=durationFor(plan.value),paid=Number(amount.value)>0;expiry.value=paid&&days?addPlanDays(start.value||todayKey(),days):'';};
-  plan.addEventListener('change',()=>{amount.value=defaultPrice(plan.value).toFixed(2);updatePreview();});
+  const updatePreview=()=>{const days=selectedDuration(),paid=Number(amount.value)>0;expiry.value=paid&&Number.isInteger(days)&&days>0?addPlanDays(start.value||todayKey(),days):'';};
+  plan.addEventListener('change',()=>{updateCustomVisibility();if(!isCustom())amount.value=defaultPrice(plan.value).toFixed(2);else amount.value='';updatePreview();});promoDays.addEventListener('input',updatePreview);
   [amount,start].forEach(el=>el.addEventListener('input',updatePreview));
   const startDate=start.value||todayKey();if(!start.value)start.value=startDate;updatePreview();
   mf.addEventListener('submit',e=>{
    e.preventDefault();e.stopImmediatePropagation();
    const fd=new FormData(mf),name=String(fd.get('name')||'').trim(),phone=String(fd.get('phone')||'').trim(),p=String(fd.get('plan')||'Mensual'),s=String(fd.get('start')||todayKey()),a=Number(fd.get('amount')||0);
    if(!name||!s||!Number.isFinite(a)||a<0){toast('Revisa el nombre, la fecha y el monto pagado.');return;}
+   const custom=isCustom(),customName=promoName.value.trim(),customDays=Number(promoDays.value);
+   if(custom&&(!customName||!Number.isInteger(customDays)||customDays<1||customDays>3650)){toast('Ingresa el nombre y una duración válida para la promoción.');return;}
+   const chosenPlan=custom?customName:p,chosenDays=custom?customDays:durationFor(p);
+   if(custom&&data.members.some(m=>m.plan===customName&&!m.promoDays)){toast('Usa otro nombre para la promoción.');return;}
    const editingId=Number(mf.dataset.editId||0),editing=editingId?data.members.find(x=>x.id===editingId):null;
    let code=String(fd.get('code')||'').replace(/\D/g,'').slice(0,4);
    if(editing&&!code){toast('Ingresa un código válido de 4 dígitos.');return;}
@@ -301,9 +317,9 @@ syncVisitOptions();render();
    if(editing&&data.members.some(x=>x.id!==editingId&&String(x.code)===code)){toast('Ese código ya está asignado a otro cliente.');return;}
    if(editing){
     const previouslyPaid=!!editing.lastPayment&&Number(editing.amount||0)>0;
-    editing.name=name;editing.phone=phone;editing.code=code;editing.plan=p;editing.start=s;editing.amount=a;
+    editing.name=name;editing.phone=phone;editing.code=code;editing.plan=chosenPlan;editing.promoName=custom?customName:null;editing.promoDays=custom?customDays:null;editing.start=s;editing.amount=a;
     // Editar los datos no crea un pago ni reinicia la membresía.
-    editing.expiry=String(fd.get('expiry')||editing.expiry||'');
+    editing.expiry=custom&&a>0?addPlanDays(s,chosenDays):String(fd.get('expiry')||editing.expiry||'');
     editing.monthPaid=previouslyPaid&&a>0&&p!=='Day pass';
     editing.dayPaid=previouslyPaid&&a>0&&p==='Day pass';
     if(!previouslyPaid||a<=0){editing.monthPaid=false;editing.dayPaid=false;editing.lastPayment='';}
@@ -314,9 +330,9 @@ syncVisitOptions();render();
    }
    const used=new Set(data.members.map(x=>String(x.code||'').replace(/\D/g,'')));let n=1;while(used.has(String(n).padStart(4,'0'))&&n<=9999)n++;if(n>9999){toast('No quedan códigos disponibles.');return;}
    const id=Math.max(0,...data.members.map(x=>Number(x.id)||0))+1;code=String(n).padStart(4,'0');codeInput.value=code;
-   const paid=a>0,days=durationFor(p);
-   const m={id,name,phone,code,plan:p,start:s,expiry:paid?addPlanDays(s,days):'',lastPayment:paid?s:'',amount:a,monthPaid:paid&&p!=='Day pass',dayPaid:paid&&p==='Day pass'};
-   data.members.push(m);if(paid)data.payments.push({id:Date.now(),memberId:id,amount:a,date:s,type:p});
+   const paid=a>0,days=chosenDays;
+   const m={id,name,phone,code,plan:chosenPlan,promoName:custom?customName:null,promoDays:custom?customDays:null,start:s,expiry:paid?addPlanDays(s,days):'',lastPayment:paid?s:'',amount:a,monthPaid:paid&&p!=='Day pass',dayPaid:paid&&p==='Day pass'};
+   data.members.push(m);if(paid)data.payments.push({id:Date.now(),memberId:id,amount:a,date:s,type:chosenPlan});
    save();render();closeModal('memberModal');mf.reset();codeInput.readOnly=true;toast(paid?`Cliente registrado y pago guardado. Código: ${code}`:`Cliente registrado sin pago. Código: ${code}`);
   },true);
  }
