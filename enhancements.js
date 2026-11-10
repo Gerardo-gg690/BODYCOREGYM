@@ -332,8 +332,8 @@ syncVisitOptions();render();
    const id=Math.max(0,...data.members.map(x=>Number(x.id)||0))+1;code=String(n).padStart(4,'0');codeInput.value=code;
    const paid=a>0,days=chosenDays;
    const m={id,name,phone,code,plan:chosenPlan,promoName:custom?customName:null,promoDays:custom?customDays:null,start:s,expiry:paid?addPlanDays(s,days):'',lastPayment:paid?s:'',amount:a,monthPaid:paid&&p!=='Day pass',dayPaid:paid&&p==='Day pass'};
-   data.members.push(m);if(paid)data.payments.push({id:Date.now(),memberId:id,amount:a,date:s,type:chosenPlan});
-   save();render();closeModal('memberModal');mf.reset();codeInput.readOnly=true;toast(paid?`Cliente registrado y pago guardado. Código: ${code}`:`Cliente registrado sin pago. Código: ${code}`);
+   data.members.push(m);const initialPayment=paid?{id:Date.now(),memberId:id,amount:a,date:s,type:chosenPlan}:null;if(initialPayment)data.payments.push(initialPayment);
+   save();render();closeModal('memberModal');mf.reset();codeInput.readOnly=true;toast(paid?`Cliente registrado y pago guardado. Código: ${code}`:`Cliente registrado sin pago. Código: ${code}`);if(initialPayment)window.bodycoreShowReceipt?.(m,initialPayment);
   },true);
  }
 
@@ -354,7 +354,7 @@ syncVisitOptions();render();
    const m=data.members.find(x=>x.id===Number(member.value)),p=rp.value,a=Number(amount.value);if(!m){toast('Selecciona un cliente.');return;}if(!['Mensual','15 días'].includes(p)){toast('Selecciona mensualidad o 15 días.');return;}if(!Number.isFinite(a)||a<=0){toast('Ingresa un monto válido.');return;}
    let base=todayKey();if(m.monthPaid&&m.expiry&&m.expiry>base)base=m.expiry;
    m.plan=p;m.start=todayKey();m.expiry=addPlanDays(base,durationFor(p));m.lastPayment=todayKey();m.amount=a;m.monthPaid=true;m.dayPaid=false;
-   data.payments.push({id:Date.now(),memberId:m.id,amount:a,date:todayKey(),type:p});save();render();closeModal('paymentModal');toast(`Renovación de ${p} registrada para ${m.name}.`);
+   const receiptPayment={id:Date.now(),memberId:m.id,amount:a,date:todayKey(),type:p};data.payments.push(receiptPayment);save();render();closeModal('paymentModal');toast(`Renovación de ${p} registrada para ${m.name}.`);window.bodycoreShowReceipt?.(m,receiptPayment);
   },true);
  }
 
