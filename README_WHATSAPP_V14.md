@@ -1,0 +1,1 @@
+V14: Botón verde de WhatsApp junto al nombre de cada cliente en la lista Clientes. Abre conversación sin texto predefinido. Admite teléfono salvadoreño de 8 dígitos o 503 + 8 dígitos. Se conserva botón de recordatorio. Requiere probar en navegador publicado.\n
