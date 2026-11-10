@@ -9,19 +9,20 @@
  if(!ready)return;
  firebase.initializeApp(cfg);
  const auth=firebase.auth(),db=firebase.firestore(),status=panel.querySelector('#firebaseStatus');
- const key='bodycore_demo_data';let loaded=false, queue=Promise.resolve(), snapshot=null;
+ const key='bodycore_demo_data';let loaded=false, queue=Promise.resolve(), snapshot=null, pending=false, kiosk=!!document.getElementById('checkIn');let unsubscribe=null;
  function inform(msg){status.textContent=msg;}
  function persist(){
    if(!loaded||!auth.currentUser)return;
+   pending=true;
    let copy;try{copy=JSON.parse(localStorage.getItem(key)||'null');}catch(_){return;}
    if(!copy)return;
-   queue=queue.then(()=>db.collection('gyms').doc(auth.currentUser.uid).set({data:copy,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})).catch(e=>{console.error('Firebase: error guardando',e);alert('No se pudo guardar en la nube. Revisa tu conexión. Los datos permanecen en este navegador.');});
+   queue=queue.then(()=>db.collection('gyms').doc(auth.currentUser.uid).set({data:copy,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})).then(()=>{pending=false;}).catch(e=>{pending=false;console.error('Firebase: error guardando',e);alert('No se pudo guardar en la nube. Revisa tu conexión. Los datos permanecen en este navegador.');});
  }
  // El guardado local existente continúa funcionando; también se sincroniza con Firestore.
  const originalSet=Storage.prototype.setItem;
  Storage.prototype.setItem=function(k,v){originalSet.call(this,k,v);if(this===localStorage&&k===key)persist();};
  auth.onAuthStateChanged(async user=>{
-   loaded=false;
+   loaded=false;if(unsubscribe){unsubscribe();unsubscribe=null;}
    if(!user){panel.style.display='flex';return;}
    if(user.uid!==window.BODYCORE_ADMIN_UID){await auth.signOut();inform('Este usuario no está autorizado.');return;}
    inform('Cargando información de Firebase...');
@@ -38,8 +39,17 @@
      loaded=true;panel.style.display='none';
      if(typeof data!=='undefined'){data=JSON.parse(JSON.stringify(snapshot));if(typeof render==='function')render();}
      window.dispatchEvent(new Event('bodycore-firebase-loaded'));
+     // Firestore listener: el panel recibe cambios del kiosco sin recargar.
+     unsubscribe=db.collection('gyms').doc(user.uid).onSnapshot(doc=>{
+       const next=doc.data()?.data;if(!next||!loaded||pending)return;
+       const serialized=JSON.stringify(next);
+       if(serialized===localStorage.getItem(key))return;
+       originalSet.call(localStorage,key,serialized);
+       if(!kiosk&&typeof data!=='undefined'){data=next;if(typeof render==='function')render();}
+       window.dispatchEvent(new Event('bodycore-live-update'));
+     },e=>console.error('Sincronización en vivo:',e));
    }catch(e){console.error(e);inform('No se pudo cargar Firebase: '+e.message);panel.style.display='flex';}
  });
  panel.querySelector('form').addEventListener('submit',async e=>{e.preventDefault();inform('Verificando...');try{await auth.signInWithEmailAndPassword(panel.querySelector('#firebaseEmail').value,panel.querySelector('#firebasePassword').value);}catch(err){inform('Error al ingresar: '+err.message);}});
- window.bodycoreFirebase={logout:()=>auth.signOut(),save:persist,refresh:async()=>{const d=await db.collection('gyms').doc(auth.currentUser.uid).get();if(d.exists){originalSet.call(localStorage,key,JSON.stringify(d.data().data));if(typeof data!=='undefined'){data=d.data().data;render();}}}};
+ window.bodycoreFirebase={logout:()=>{if(!confirm('¿Cerrar sesión de BODYCORE GYM?'))return;return auth.signOut();},save:persist,refresh:async()=>{const d=await db.collection('gyms').doc(auth.currentUser.uid).get();if(d.exists){originalSet.call(localStorage,key,JSON.stringify(d.data().data));if(typeof data!=='undefined'){data=d.data().data;render();}}}};
 })();

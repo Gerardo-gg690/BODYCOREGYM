@@ -9,7 +9,7 @@
   const draw=()=>{codeOut.textContent=code.padEnd(4,'_').split('').join(' ');};
   document.getElementById('keypad').addEventListener('click',e=>{const b=e.target.closest('[data-key]');if(!b)return;const k=b.dataset.key;if(k==='clear')code='';else if(k==='back')code=code.slice(0,-1);else if(/^\d$/.test(k)&&code.length<4)code+=k;draw();});
   document.getElementById('reset').addEventListener('click',()=>{code='';draw();result.className='result';result.innerHTML='<div class="result-symbol">⌨</div><b>Esperando tu código</b><span>Tu estado aparecerá aquí.</span>';});
-  document.getElementById('checkIn').addEventListener('click',()=>{
+  document.getElementById('checkIn').addEventListener('click',async()=>{
     if(!/^\d{4}$/.test(code)){show('no','CÓDIGO INCOMPLETO',['Ingresa los cuatro números de tu código.']);return;}
     let data;try{data=JSON.parse(localStorage.getItem('bodycore_demo_data')||'null');}catch(_){data=null;}
     if(!data||!Array.isArray(data.members)){show('no','SISTEMA NO DISPONIBLE',['No se encontraron los datos del gimnasio en este dispositivo.']);return;}
@@ -25,7 +25,22 @@
       show('no','RENOVACIÓN PENDIENTE',[first,reason,'Acércate a recepción para renovar.','Mensualidad $25.00 · 15 días $15.00']);return;
     }
     const already=data.attendance.some(a=>a.memberId===m.id&&a.date===d);
-    if(!already){const t=new Date().toTimeString().slice(0,5);data.attendance.push({id:Date.now(),memberId:m.id,date:d,time:t,paymentType:'arrival',planPaid:validDay?'Pase diario pagado':m.plan,dayPaid:false,amount:0,paid:true});localStorage.setItem('bodycore_demo_data',JSON.stringify(data));}
+    if(!already){
+      const t=new Date().toTimeString().slice(0,5);
+      const entry={id:Date.now(),memberId:m.id,date:d,time:t,paymentType:'arrival',planPaid:validDay?'Pase diario pagado':m.plan,dayPaid:false,amount:0,paid:true};
+      try {
+        const user=firebase.auth().currentUser;
+        if(!user)throw new Error('Inicia sesión en el kiosco para registrar la llegada.');
+        const ref=firebase.firestore().collection('gyms').doc(user.uid);
+        await firebase.firestore().runTransaction(async tx=>{
+          const snap=await tx.get(ref);if(!snap.exists)throw new Error('No se encontraron registros en la nube.');
+          const latest=snap.data().data||{};
+          const visits=Array.isArray(latest.attendance)?latest.attendance:[];
+          if(visits.some(a=>a.memberId===m.id&&a.date===d))return;
+          tx.update(ref,{data:{...latest,attendance:[...visits,entry]},updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        });
+      }catch(err){show('no','NO SE PUDO REGISTRAR',[err.message,'Comprueba tu conexión.']);return;}
+    }
     const remaining=validDay?'Tu pase diario está pagado.':n===0?'Tu membresía vence hoy.':`Te quedan ${n} día(s) para renovar.`;
     show('ok',already?'LLEGADA YA REGISTRADA':'¡LLEGADA REGISTRADA!',[`Hola, ${first}.`,remaining,m.expiry?`Fecha de vencimiento: ${dateLabel(m.expiry)}.`:'Pase válido únicamente hoy.','No se realizó ningún cobro.']);
     code='';draw();
